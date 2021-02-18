@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Tkb_SEAM0007 error="false">
+	<Name>SEAM0007</Name>
+	<Input iName="">
+		<I Name="gnlAcNo"></I>
+		<I Name="gdsNo"></I>
+		<I Name="Record1">
+			<I1 Name="gnlAcno"></I1>
+			<I1 Name="encdScrtNo"></I1>
+		</I>
+	</Input>
+</Tkb_SEAM0007>

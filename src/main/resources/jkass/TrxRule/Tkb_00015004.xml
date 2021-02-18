@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Tkb_00015004 error="false">
+	<Name>00015004</Name>
+	<Input iName="">
+		<I Name="length"></I>
+		<I Name="flg"></I>
+		<I Name="nall"></I>
+	</Input>
+	<Output oName="">
+		<O Name="isCnt"></O>
+		<O Name="length"></O>
+		<O Name="msg"></O>
+		<O Name="clsf"></O>
+		<O Name="Record1">
+			<O1 Name="dt"></O1>
+			<O1 Name="opnPrc"></O1>
+		</O>
+	</Output>
+</Tkb_00015004>

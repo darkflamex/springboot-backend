@@ -1,0 +1,23 @@
+{
+	"clsf" : "SC",
+	"TRX_HEADER" :	{
+		"trx_compress" : "false",
+		"trx_node_id" : "11"
+	},
+	
+	"isCnt" : "33",
+	"length" : "11",
+	"msg" : "ab",
+	"Record1" : 
+	[
+		{
+			"dt" : "20200101",
+			"opnPrc" : "1000"
+		},
+		{
+			"dt" : "20200202",
+			"opnPrc" : "2000"
+		}
+		
+	]
+}
