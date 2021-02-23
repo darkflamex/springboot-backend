@@ -8,8 +8,14 @@
 		</encoder>
 	</appender>
 	
-	<root level="INFO">
+	<root level="ERROR">
 		<appender-ref ref="STDOUT" />
 	</root>
+	
+	<logger name="com.kbsec.mydata" additivity="false">
+        <level value="INFO"/>
+        <appender-ref ref="STDOUT" />
+    </logger>
+
 
 </configuration>

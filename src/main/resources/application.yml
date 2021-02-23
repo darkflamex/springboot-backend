@@ -53,6 +53,7 @@ spring:
     // data: "classpath:user.sql"
 
 api:
+   
   url: 
     signIn: /signIn
     signOut: /signOut
@@ -60,8 +61,8 @@ api:
     accessdenied: /error/accessdenied
     refreshToken: /api/token
   token:
-    expired: 10
-    refreshExpired: 60
+    expired: 60000000
+    refreshExpired: 6000000000
     signing-key: securityKey
     
 tr:
