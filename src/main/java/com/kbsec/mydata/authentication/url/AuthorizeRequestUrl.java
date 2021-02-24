@@ -12,5 +12,6 @@ import lombok.Data;
 public class AuthorizeRequestUrl {
 	private String signIn;
 	private String signOut;
+	private String authorize;
 	
 }

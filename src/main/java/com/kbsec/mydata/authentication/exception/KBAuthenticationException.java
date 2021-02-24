@@ -24,6 +24,8 @@ public class KBAuthenticationException extends AuthenticationException{
 		this(code, null, null);
 	}
 	
+	
+	
 	public KBAuthenticationException(String code, String reason) {
 		// TODO Auto-generated constructor stub
 		this(code, reason, null);
@@ -35,6 +37,14 @@ public class KBAuthenticationException extends AuthenticationException{
 		this.code = code;
 		this.reason = reason;
 		this.data = data;
+	}
+	
+	public KBAuthenticationException(String code, Throwable throwable) {
+		// TODO Auto-generated constructor stub
+		super(code, throwable);
+		this.code = code;
+		this.reason = throwable.getMessage();
+		this.data = null;
 	}
 
 	@Override

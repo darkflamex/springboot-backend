@@ -20,20 +20,21 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kbsec.mydata.authentication.SignInAuthenticationToken;
 import com.kbsec.mydata.authentication.TokenAuthenticationService;
+import com.kbsec.mydata.authentication.exception.KBAuthenticationException;
 
 /**
  * Sign-In Filter
  * @author skyrun
  *
  */
-public class SignInFilter extends AbstractAuthenticationProcessingFilter {
+public class AuthenticationFilter extends AbstractAuthenticationProcessingFilter {
 
-	static final Logger logger = LoggerFactory.getLogger(SignInFilter.class);
+	static final Logger logger = LoggerFactory.getLogger(AuthenticationFilter.class);
 	
 	
     private TokenAuthenticationService tokenAuthenticationService;
 
-    public SignInFilter(String url, AuthenticationManager authenticationManager, TokenAuthenticationService service) {
+    public AuthenticationFilter(String url, AuthenticationManager authenticationManager, TokenAuthenticationService service) {
         super(new AntPathRequestMatcher(url));
         setAuthenticationManager(authenticationManager);
         tokenAuthenticationService = service;
@@ -42,7 +43,6 @@ public class SignInFilter extends AbstractAuthenticationProcessingFilter {
     @Override
     public Authentication attemptAuthentication(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {    	
     	return getAuthenticationManager()
-    			
     			.authenticate(extract(httpServletRequest));
     }
 
@@ -52,53 +52,22 @@ public class SignInFilter extends AbstractAuthenticationProcessingFilter {
     	logger.info("Successful Auth=========");
     	
     	SignInAuthenticationToken auth = (SignInAuthenticationToken) authentication;
-        tokenAuthenticationService.addSignInAuthentication(response, auth); 
+        tokenAuthenticationService.addAuthentication(response, auth); 
     }
     
     
     private UsernamePasswordAuthenticationToken extract(HttpServletRequest httpServletRequest) {
     	
     	UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = null;
-    	Credentials credentials = null;
     	
-    	String reqBody = "";
-    	try {
-			reqBody = org.apache.commons.io.IOUtils.toString(httpServletRequest.getInputStream(),"UTF-8");
-			logger.info(reqBody);
-    	} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-    	
-    	
-    	try {
-			// credentials = new ObjectMapper().readValue(httpServletRequest.getInputStream(), Credentials.class);
-			credentials = new ObjectMapper().readValue(reqBody, Credentials.class);
-			
-			if(StringUtils.isBlank(credentials.getCredentials())) {
-				throw new BadCredentialsException("not found credentials");
-			}
-			
-			usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(credentials.getPrincipal(), credentials.getCredentials());
-    	} catch (IOException e) {
-			logger.error(e.getMessage(),e);
-    		// TODO Auto-generated catch block
-    		throw new AuthenticationServiceException(e.getMessage(),e);
-		}
-    	
+    	String sid = httpServletRequest.getParameter("sid");
+    	if(StringUtils.isBlank(sid)) {
+    		throw new KBAuthenticationException("300", new BadCredentialsException("not found sid."));
+    	}
+		usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(sid, null);    	
     	return usernamePasswordAuthenticationToken;
     }
-    
-//    private String extract(String header) {
-//        if (StringUtils.isBlank(header)) {
-//            throw new AuthenticationServiceException("Authorization header cannot be blank!");
-//        }
-//
-//        if (header.length() <= ApiTokenConfig.SID_HEADER_NAME.length()) {
-//            throw new AuthenticationServiceException("Invalid authorization header size.");
-//        }
-//        return header.substring(ApiTokenConfig.SID_HEADER_NAME.length(), header.length());
-//    }
+
     
    
     

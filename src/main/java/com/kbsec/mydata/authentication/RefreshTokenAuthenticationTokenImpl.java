@@ -5,33 +5,27 @@ import java.util.Collection;
 
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.util.DigestUtils;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.Setter;
 import lombok.ToString;
 
-
-@Data
 @ToString(callSuper = true)
-public class JwtAuthenticationTokenImpl extends AbstractAuthenticationToken {
+public class RefreshTokenAuthenticationTokenImpl extends AbstractAuthenticationToken {
 
     /**
 	 * 
 	 */
 	private static final long serialVersionUID = -2834089109988062923L;
 	
-	private String jwt;
+	private String refreshTokenJwt;
 	
-	public JwtAuthenticationTokenImpl(String jwt, Collection<? extends GrantedAuthority> authorities) {
+	public RefreshTokenAuthenticationTokenImpl(String refreshTokenJwt, Collection<? extends GrantedAuthority> authorities) {
 		super(authorities);
-		this.jwt = jwt;
+		this.refreshTokenJwt = refreshTokenJwt;
 	}
 	
-	public JwtAuthenticationTokenImpl(String jwt) {
+	public RefreshTokenAuthenticationTokenImpl(String refreshTokenJwt) {
 		super(null);
-		this.jwt = jwt;
+		this.refreshTokenJwt = refreshTokenJwt;
 	}
 	
 
@@ -42,7 +36,7 @@ public class JwtAuthenticationTokenImpl extends AbstractAuthenticationToken {
 
     @Override
     public Object getPrincipal() {
-        return jwt != null ? jwt.toString() : "";
+        return refreshTokenJwt != null ? refreshTokenJwt.toString() : "";
     }
 
 //    public String getHash() {

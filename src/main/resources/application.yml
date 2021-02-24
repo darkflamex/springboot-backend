@@ -58,6 +58,7 @@ api:
     signIn: /signIn
     signOut: /signOut
     mypage: /mypage
+    authorize: /authorize
     accessdenied: /error/accessdenied
     refreshToken: /api/token
   token:

@@ -11,7 +11,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -21,15 +20,15 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.servlet.i18n.SessionLocaleResolver;
 
-import com.kbsec.mydata.authentication.AuthenticationProviderImpl;
 import com.kbsec.mydata.authentication.RefreshTokenAuthenticationProviderImpl;
+import com.kbsec.mydata.authentication.SignInAuthenticationProviderImpl;
 import com.kbsec.mydata.authentication.TokenAuthenticationService;
-import com.kbsec.mydata.authentication.entrypoint.JwtAuthenticationEntryPoint;
+import com.kbsec.mydata.authentication.entrypoint.CustomAuthenticationEntryPoint;
+import com.kbsec.mydata.authentication.filter.AuthenticationFilter;
 import com.kbsec.mydata.authentication.filter.JWTFilter;
 import com.kbsec.mydata.authentication.filter.RefreshTokenFilter;
 import com.kbsec.mydata.authentication.filter.SignInFilter;
 import com.kbsec.mydata.authentication.redis.RedisService;
-import com.kbsec.mydata.authentication.token.ApiTokenConfig;
 import com.kbsec.mydata.authentication.url.AuthorizeRequestUrl;
 
 
@@ -49,35 +48,20 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 	
 	@Autowired
 	private MessageSource messageSource;
-	
-//	@Autowired
-//	private HandlerExceptionResolver resolver;
-	
+
 	@Autowired
-	private ApiTokenConfig tokenConfig;
+	private AuthenticationConfig tokenConfig;
 	
 
 	@Override
 	protected AuthenticationManager authenticationManager() throws Exception {  	
 		AuthenticationProvider[] arr = {
-			(AuthenticationProvider) new AuthenticationProviderImpl(tokenConfig, redisService),
+			(AuthenticationProvider) new SignInAuthenticationProviderImpl(tokenConfig, redisService),
 			(AuthenticationProvider) new RefreshTokenAuthenticationProviderImpl(tokenConfig, redisService)
-		};
-		
-		
+		};	
 		return new ProviderManager(
 				Arrays.asList(arr));
 	}
-	
-//	@Override
-//	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-//	    auth  // you have to prepare following beans also
-//	        .authenticationProvider(new AuthenticationProviderImpl(tokenConfig, redisService))
-//	        .authenticationProvider(new RefreshTokenAuthenticationProviderImpl(tokenConfig, redisService));
-//	}
-	
-	
-
 	
 	@Bean
 	public FilterRegistrationBean<CorsFilter> corsFilter() {
@@ -89,7 +73,6 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 		config.addAllowedMethod("*");
 		source.registerCorsConfiguration("/**", config);
 		FilterRegistrationBean<CorsFilter> bean = new FilterRegistrationBean<CorsFilter>(new CorsFilter(source));
-		// bean.setOrder(0);
 		return bean;
 	}
 
@@ -138,26 +121,34 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
 		http.csrf().disable()
 		.authorizeRequests()
-		//             .anyRequest().authenticated()
-		.antMatchers("/vi/api/**").authenticated()
+		.antMatchers("/v1/api/**").authenticated()
 		.and().httpBasic().disable()
 		.csrf().disable()
 		.cors().disable()
+		
 		// sign-in filter
-		.addFilterBefore(new SignInFilter(authorizeRequestUrl.getSignIn(), authenticationManager(), tokenService), UsernamePasswordAuthenticationFilter.class)
-
-		.addFilterBefore(new RefreshTokenFilter("/token", authenticationManager(), redisService, tokenConfig), UsernamePasswordAuthenticationFilter.class)
-					
-		// auth filter
+		// .addFilterBefore(new SignInFilter(authorizeRequestUrl.getSignIn(), authenticationManager(), tokenService), UsernamePasswordAuthenticationFilter.class)
+		
+		//
+		.addFilterBefore(new AuthenticationFilter(authorizeRequestUrl.getSignIn(), authenticationManager(), tokenService), UsernamePasswordAuthenticationFilter.class)
+		
+		
+		// refresh token filter
+		.addFilterBefore(new RefreshTokenFilter("/token", authenticationManager(), redisService, tokenConfig, messageSource), UsernamePasswordAuthenticationFilter.class)
+		
+//		.exceptionHandling()
+//		.authenticationEntryPoint(jwtAuthenticationEntryPoint())
+		
+		// authentication filter
+//		.and()
 		.addFilterBefore(new JWTFilter(tokenService, jwtAuthenticationEntryPoint() ), UsernamePasswordAuthenticationFilter.class)
 		;
 
 	}
 
-	
 	@Bean("jwtAuthenticationEntryPoint")
-	public JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint() {
-		JwtAuthenticationEntryPoint JwtAuthenticationEntryPoint = new JwtAuthenticationEntryPoint(messageSource);
+	public CustomAuthenticationEntryPoint jwtAuthenticationEntryPoint() {
+		CustomAuthenticationEntryPoint JwtAuthenticationEntryPoint = new CustomAuthenticationEntryPoint(messageSource);
 		return JwtAuthenticationEntryPoint;
 	}
 	

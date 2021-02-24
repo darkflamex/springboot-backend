@@ -2,13 +2,11 @@
 package com.kbsec.mydata.authentication;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Date;
 
-import com.kbsec.mydata.authentication.entity.JWTTokenEntity;
-
-import lombok.*;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Getter;
 
 
 @SuppressWarnings("serial")
@@ -17,17 +15,6 @@ import lombok.*;
 @Data
 public class KBUser implements Serializable {
 
-	public KBUser() {}
-	
-	public KBUser(String sid, String accessToken, String refreshToken, boolean isSignIn, Date created) {
-		this.sid = sid;
-		this.accessToken = accessToken;
-		this.refreshToken = refreshToken;
-		this.isSignIn = isSignIn;
-		this.created = created;	
-	}
-    
-	
     private String sid;
     private String accessToken;
     private String refreshToken;
@@ -35,7 +22,25 @@ public class KBUser implements Serializable {
     @Builder.Default
     private boolean isSignIn = false;
 
-    private Date created;
+    private String created;
+    
+    private String accessTokenIssued;
+    private String refreshTokenIssued;
+    
+    public KBUser() {}
+	
+	public KBUser(String sid, String accessToken
+			, String refreshToken, boolean isSignIn
+			, String created, String accessTokenIssued, String refreshTokenIssued) {
+		this.sid = sid;
+		this.accessToken = accessToken;
+		this.refreshToken = refreshToken;
+		this.isSignIn = isSignIn;
+		this.created = created;	
+		this.accessTokenIssued = accessTokenIssued;
+		this.refreshTokenIssued = refreshTokenIssued;
+	}
+    
 
 //    public boolean hasExpired() {
 //        if(created == null){

@@ -1,6 +1,11 @@
 package com.kbsec.mydata.authentication;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,26 +15,21 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.server.ServletServerHttpResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.token.Sha512DigestUtils;
 
-import com.google.gson.Gson;
-import com.kbsec.mydata.authentication.SignInAuthenticationToken;
-import com.kbsec.mydata.authentication.KBUser;
+import com.kbsec.mydata.authentication.config.AuthenticationConfig;
+import com.kbsec.mydata.authentication.config.DefaultApiResponse;
 import com.kbsec.mydata.authentication.entity.JWTTokenEntity;
-import com.kbsec.mydata.authentication.exception.KBAuthenticationException;
+import com.kbsec.mydata.authentication.jsonwebtoken.JwtUtils;
 import com.kbsec.mydata.authentication.redis.RedisService;
-import com.kbsec.mydata.authentication.token.ApiTokenConfig;
+import com.kbsec.mydata.authentication.url.AuthorizeRequestUrl;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
@@ -41,102 +41,97 @@ public class TokenAuthenticationService {
 
     private String secret;
 
-    private ApiTokenConfig apiTokenConfig;
+    private AuthenticationConfig authenticationConfig;
     
-    public TokenAuthenticationService(RedisService service, ApiTokenConfig apiTokenConfig) {
+    @Autowired
+    private AuthorizeRequestUrl authorizeRequestUrl;
     
-    	this.apiTokenConfig = apiTokenConfig;	
+    
+    public TokenAuthenticationService(RedisService service, AuthenticationConfig authenticationConfig) {
+    
+    	this.authenticationConfig = authenticationConfig;	
     	this.service = service;
-        secret = Sha512DigestUtils.shaHex(apiTokenConfig.getSigningKey());
+        secret = Sha512DigestUtils.shaHex(authenticationConfig.getSigningKey());
     }
 
-    public String accessTokenByJWT( ApiTokenConfig apiTokenConfig,
-    		String accessToken, String secret) {
-		Map<String, Object> claims = new HashMap<>();
-		claims.put("accessToken", accessToken);
-		//claims.put("hash", authToken.getHash());
-
-		String accessTokenJWT = Jwts.builder()
-				.setSubject("accessToken")
-				.setClaims(claims)
-				.setExpiration(new Date(System.currentTimeMillis() + apiTokenConfig.getExpired()))
-				.signWith(SignatureAlgorithm.HS512, secret)
-				.compact();
-
-		return accessTokenJWT;
-
-	}
-
-	public String refreshTokenByJWT( ApiTokenConfig apiTokenConfig,
-			String refreshToken, String secret) {
-		
-		Map<String, Object> claims = new HashMap<>();
-		claims.put("refreshToken", refreshToken);
-		
-		
-		String refreshTokenByJWT = Jwts.builder()
-				.setSubject("refreshToken")
-				.setClaims(claims)
-				.setExpiration(new Date(System.currentTimeMillis() + apiTokenConfig.getRefreshExpired()))
-				.signWith(SignatureAlgorithm.HS512, secret)
-				.compact();
-
-		return refreshTokenByJWT;
-
-	}
-    
+     
     public void addAuthentication(HttpServletResponse response, SignInAuthenticationToken auth) throws IOException {
-        // We generate a token now.
-    	logger.error("START");
-    	//        response.addHeader(ApiTokenConfig.AUTHORIZATION_HEADER_NAME, ApiTokenConfig.AUTHORIZATION_HEADER_PREFIX + " " + JWT);
+        
+    	KBUser user  = (KBUser)auth.getDetails();
     	
-    	
-    	KBUser user = (KBUser)auth.getDetails();
+    	String userCreated = user.getCreated();
+    	LocalDateTime created = LocalDateTime.parse(userCreated, DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
+    	 		    	
     	logger.info("accessToken : " + user.getAccessToken());
     	logger.info("refreshToken : " + user.getRefreshToken());
         
+    	Map<String, Object> accessTokenClaims = new HashMap<>();
+    	accessTokenClaims.put(AuthenticationConfig.ACCESS_TOKEN, user.getAccessToken());
+    	String accessTokenJwt = JwtUtils.build(AuthenticationConfig.ACCESS_TOKEN, accessTokenClaims, created, authenticationConfig.getExpired(), secret);
+    	logger.info("accessTokenJwt : " + accessTokenJwt);
     	
-    	
-    	String accessTokenJwt = accessTokenByJWT(apiTokenConfig, user.getAccessToken(), secret);
-    	String refreshTokenJwt = refreshTokenByJWT(apiTokenConfig, user.getRefreshToken(), secret);
-    	
+    	Map<String, Object> refreshTokenClaims = new HashMap<>();
+    	refreshTokenClaims.put(AuthenticationConfig.REFRESH_TOKEN, user.getRefreshToken());
+    	String refreshTokenJwt = JwtUtils.build(AuthenticationConfig.REFRESH_TOKEN, refreshTokenClaims, created, authenticationConfig.getRefreshExpired(), secret);
     	logger.info("refreshTokenJwt : " + refreshTokenJwt);
+    
+    	response.sendRedirect(authorizeRequestUrl.getAuthorize() + "?accessToken=" + accessTokenJwt + "&refreshToken=" + refreshTokenJwt);
     	
+    }
+    
+    public void addSignInAuthentication(HttpServletResponse response, SignInAuthenticationToken auth) throws IOException {
+        // We generate a token now.
+    	
+    	KBUser user  = (KBUser)auth.getDetails();
+    	
+    	String userCreated = user.getCreated();
+    	LocalDateTime created = LocalDateTime.parse(userCreated, DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
+    	 		    	
+    	logger.info("accessToken : " + user.getAccessToken());
+    	logger.info("refreshToken : " + user.getRefreshToken());
+        
+    	Map<String, Object> accessTokenClaims = new HashMap<>();
+    	accessTokenClaims.put(AuthenticationConfig.ACCESS_TOKEN, user.getAccessToken());
+    	String accessTokenJwt = JwtUtils.build(AuthenticationConfig.ACCESS_TOKEN, accessTokenClaims, created, authenticationConfig.getExpired(), secret);
+    	logger.info("accessTokenJwt : " + accessTokenJwt);
+    	
+    	Map<String, Object> refreshTokenClaims = new HashMap<>();
+    	refreshTokenClaims.put(AuthenticationConfig.REFRESH_TOKEN, user.getRefreshToken());
+    	String refreshTokenJwt = JwtUtils.build(AuthenticationConfig.REFRESH_TOKEN, refreshTokenClaims, created, authenticationConfig.getRefreshExpired(), secret);
+    	logger.info("refreshTokenJwt : " + refreshTokenJwt);
     	
     	JWTTokenEntity jwtToken = JWTTokenEntity.builder()
     			.accessToken(accessTokenJwt)
     			.refreshToken(refreshTokenJwt)
     			.build();
     	
-    	ServletServerHttpResponse res = new ServletServerHttpResponse(response);
-        res.setStatusCode(HttpStatus.ACCEPTED);
-        res.getServletResponse().setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        res.getBody().write(new Gson().toJson(jwtToken).toString().getBytes());
+    	DefaultApiResponse.response(response, jwtToken);
     	
 		
     }
 
     public Authentication getAuthentication(HttpServletRequest request) throws AuthenticationException {
-        String token = request.getHeader(ApiTokenConfig.AUTHORIZATION_HEADER_NAME);
-        if (token == null) {
+        String accessTokenJwt = request.getHeader(AuthenticationConfig.AUTHORIZATION_HEADER_NAME);
+        if (accessTokenJwt == null) {
             return null;
         }
         //remove "Bearer" text
-        token = token.replace(ApiTokenConfig.AUTHORIZATION_HEADER_PREFIX, "").trim();
+        accessTokenJwt = accessTokenJwt.replace(AuthenticationConfig.AUTHORIZATION_HEADER_PREFIX, "").trim();
 
         //Validating the token
-        if (token != null && !token.isEmpty()) {
+        if (accessTokenJwt != null && !accessTokenJwt.isEmpty()) {
             // parsing the token.`
-            Claims claims = null;
-            try {
-                claims = Jwts.parser()
-                        .setSigningKey(secret)
-                        .parseClaimsJws(token).getBody();
-            } catch (JwtException jwtException) {            	
-            	logger.error("**JWT Error :"+ jwtException.getMessage());
-            	throw new KBAuthenticationException("400",jwtException.getMessage());
-            }
+            Claims claims = JwtUtils.parse(accessTokenJwt, secret);
             
+//            try {
+//                claims = Jwts.parser()
+//                        .setSigningKey(secret)
+//                        .parseClaimsJws(token).getBody();
+//            } catch (JwtException jwtException) {            	
+//            	logger.error("**JWT Error :"+ jwtException.getMessage());
+//            	throw new KBAuthenticationException("400",jwtException.getMessage());
+//            }
+//            
             if (claims != null && claims.containsKey("accessToken")) {
                 String accessToken = claims.get("accessToken").toString();
                 KBUser user = (KBUser) service.getValue(accessToken, KBUser.class);
@@ -148,9 +143,7 @@ public class TokenAuthenticationService {
                 } else {
                     return new UsernamePasswordAuthenticationToken(null, null);
                 }
-            }
-            
-            
+            }   
         }
         return null;
     }

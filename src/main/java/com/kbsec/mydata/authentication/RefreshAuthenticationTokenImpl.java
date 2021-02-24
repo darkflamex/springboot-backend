@@ -5,15 +5,9 @@ import java.util.Collection;
 
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.util.DigestUtils;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.Setter;
 import lombok.ToString;
 
-
-@Data
 @ToString(callSuper = true)
 public class RefreshAuthenticationTokenImpl extends AbstractAuthenticationToken {
 
