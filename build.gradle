@@ -51,6 +51,8 @@ dependencies {
 	compile 'io.springfox:springfox-swagger-ui:2.9.2'
 
 	compile 'com.google.code.gson:gson:2.8.2'
+	compile 'it.ozimov:embedded-redis:0.7.2'	
+
 }
 
 
