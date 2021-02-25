@@ -15,7 +15,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.kbsec.mydata.authentication.TokenAuthenticationService;
+import com.kbsec.mydata.authentication.AuthenticationService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,11 +24,11 @@ public class JWTFilter extends OncePerRequestFilter {
 	private boolean ignoreFailure = false;
 
 
-	private TokenAuthenticationService service;
+	private AuthenticationService service;
 	private AuthenticationEntryPoint authenticationEntryPoint;
 
 
-	public JWTFilter(TokenAuthenticationService service, AuthenticationEntryPoint authenticationEntryPoint) {
+	public JWTFilter(AuthenticationService service, AuthenticationEntryPoint authenticationEntryPoint) {
 		this.service = service;
 		this.authenticationEntryPoint = authenticationEntryPoint;
 	}

@@ -19,7 +19,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kbsec.mydata.authentication.SignInAuthenticationToken;
-import com.kbsec.mydata.authentication.TokenAuthenticationService;
+import com.kbsec.mydata.authentication.AuthenticationService;
 
 /**
  * Sign-In Filter
@@ -29,77 +29,76 @@ import com.kbsec.mydata.authentication.TokenAuthenticationService;
 public class SignInFilter extends AbstractAuthenticationProcessingFilter {
 
 	static final Logger logger = LoggerFactory.getLogger(SignInFilter.class);
-	
-	
-    private TokenAuthenticationService tokenAuthenticationService;
 
-    public SignInFilter(String url, AuthenticationManager authenticationManager, TokenAuthenticationService service) {
-        super(new AntPathRequestMatcher(url));
-        setAuthenticationManager(authenticationManager);
-        tokenAuthenticationService = service;
-    }
 
-    @Override
-    public Authentication attemptAuthentication(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {    	
-    	return getAuthenticationManager()
-    			
-    			.authenticate(extract(httpServletRequest));
-    }
+	private AuthenticationService tokenAuthenticationService;
 
-    @Override
-    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException {
-        
-    	logger.info("Successful Auth=========");
-    	
-    	SignInAuthenticationToken auth = (SignInAuthenticationToken) authentication;
-        tokenAuthenticationService.addSignInAuthentication(response, auth); 
-    }
-    
-    
-    private UsernamePasswordAuthenticationToken extract(HttpServletRequest httpServletRequest) {
-    	
-    	UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = null;
-    	Credentials credentials = null;
-    	
-    	String reqBody = "";
-    	try {
+	public SignInFilter(String url, AuthenticationManager authenticationManager, AuthenticationService service) {
+		super(new AntPathRequestMatcher(url));
+		setAuthenticationManager(authenticationManager);
+		tokenAuthenticationService = service;
+	}
+
+	private UsernamePasswordAuthenticationToken extract(HttpServletRequest httpServletRequest) {
+
+		UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = null;
+		Credentials credentials = null;
+
+		String reqBody = "";
+		try {
 			reqBody = org.apache.commons.io.IOUtils.toString(httpServletRequest.getInputStream(),"UTF-8");
 			logger.info(reqBody);
-    	} catch (IOException e1) {
+		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-    	
-    	
-    	try {
+
+		
+		try {
 			// credentials = new ObjectMapper().readValue(httpServletRequest.getInputStream(), Credentials.class);
 			credentials = new ObjectMapper().readValue(reqBody, Credentials.class);
-			
+
 			if(StringUtils.isBlank(credentials.getCredentials())) {
 				throw new BadCredentialsException("not found credentials");
 			}
-			
+
 			usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(credentials.getPrincipal(), credentials.getCredentials());
-    	} catch (IOException e) {
+		} catch (IOException e) {
 			logger.error(e.getMessage(),e);
-    		// TODO Auto-generated catch block
-    		throw new AuthenticationServiceException(e.getMessage(),e);
+			// TODO Auto-generated catch block
+			throw new AuthenticationServiceException(e.getMessage(),e);
 		}
-    	
-    	return usernamePasswordAuthenticationToken;
-    }
-    
-//    private String extract(String header) {
-//        if (StringUtils.isBlank(header)) {
-//            throw new AuthenticationServiceException("Authorization header cannot be blank!");
-//        }
-//
-//        if (header.length() <= ApiTokenConfig.SID_HEADER_NAME.length()) {
-//            throw new AuthenticationServiceException("Invalid authorization header size.");
-//        }
-//        return header.substring(ApiTokenConfig.SID_HEADER_NAME.length(), header.length());
-//    }
-    
-   
-    
+
+		return usernamePasswordAuthenticationToken;
+	}
+
+	@Override
+	public Authentication attemptAuthentication(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {    	
+		return getAuthenticationManager().authenticate(extract(httpServletRequest));
+	}
+
+	@Override
+	protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException {
+
+		logger.info("Successful Auth=========");
+
+		SignInAuthenticationToken auth = (SignInAuthenticationToken) authentication;
+		tokenAuthenticationService.addSignInAuthentication(response, auth); 
+	}
+
+
+
+	//    private String extract(String header) {
+	//        if (StringUtils.isBlank(header)) {
+	//            throw new AuthenticationServiceException("Authorization header cannot be blank!");
+	//        }
+	//
+	//        if (header.length() <= ApiTokenConfig.SID_HEADER_NAME.length()) {
+	//            throw new AuthenticationServiceException("Invalid authorization header size.");
+	//        }
+	//        return header.substring(ApiTokenConfig.SID_HEADER_NAME.length(), header.length());
+	//    }
+
+
+
 }

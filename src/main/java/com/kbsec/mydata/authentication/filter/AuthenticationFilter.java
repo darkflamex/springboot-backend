@@ -19,7 +19,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kbsec.mydata.authentication.SignInAuthenticationToken;
-import com.kbsec.mydata.authentication.TokenAuthenticationService;
+import com.kbsec.mydata.authentication.AuthenticationService;
 import com.kbsec.mydata.authentication.exception.KBAuthenticationException;
 
 /**
@@ -32,9 +32,9 @@ public class AuthenticationFilter extends AbstractAuthenticationProcessingFilter
 	static final Logger logger = LoggerFactory.getLogger(AuthenticationFilter.class);
 	
 	
-    private TokenAuthenticationService tokenAuthenticationService;
+    private AuthenticationService tokenAuthenticationService;
 
-    public AuthenticationFilter(String url, AuthenticationManager authenticationManager, TokenAuthenticationService service) {
+    public AuthenticationFilter(String url, AuthenticationManager authenticationManager, AuthenticationService service) {
         super(new AntPathRequestMatcher(url));
         setAuthenticationManager(authenticationManager);
         tokenAuthenticationService = service;

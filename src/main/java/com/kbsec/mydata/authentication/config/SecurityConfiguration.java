@@ -22,7 +22,7 @@ import org.springframework.web.servlet.i18n.SessionLocaleResolver;
 
 import com.kbsec.mydata.authentication.RefreshTokenAuthenticationProviderImpl;
 import com.kbsec.mydata.authentication.SignInAuthenticationProviderImpl;
-import com.kbsec.mydata.authentication.TokenAuthenticationService;
+import com.kbsec.mydata.authentication.AuthenticationService;
 import com.kbsec.mydata.authentication.entrypoint.CustomAuthenticationEntryPoint;
 import com.kbsec.mydata.authentication.filter.AuthenticationFilter;
 import com.kbsec.mydata.authentication.filter.JWTFilter;
@@ -38,7 +38,7 @@ import com.kbsec.mydata.authentication.url.AuthorizeRequestUrl;
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
 	@Autowired
-	private TokenAuthenticationService tokenService;
+	private AuthenticationService tokenService;
 
 	@Autowired
 	private RedisService redisService;

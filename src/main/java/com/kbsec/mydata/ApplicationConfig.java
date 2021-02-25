@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kbsec.mydata.authentication.TokenAuthenticationService;
+import com.kbsec.mydata.authentication.AuthenticationService;
 import com.kbsec.mydata.authentication.config.AuthenticationConfig;
 import com.kbsec.mydata.authentication.redis.RedisService;
 import com.kbsec.mydata.authentication.url.AuthorizeRequestUrl;
@@ -20,8 +20,8 @@ public class ApplicationConfig {
 	private AuthenticationConfig tokenConfig;
 	
 	@Bean
-	public TokenAuthenticationService tokenAuthService() {
-		return new TokenAuthenticationService(redisService, tokenConfig);
+	public AuthenticationService tokenAuthService() {
+		return new AuthenticationService(redisService, tokenConfig);
 	}
 	
 	@Bean

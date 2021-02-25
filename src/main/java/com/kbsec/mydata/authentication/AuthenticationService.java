@@ -33,9 +33,9 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
-public class TokenAuthenticationService {
+public class AuthenticationService {
 
-	private static final Logger logger = LoggerFactory.getLogger(TokenAuthenticationService.class);
+	private static final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
 	
     private RedisService service;
 
@@ -47,7 +47,7 @@ public class TokenAuthenticationService {
     private AuthorizeRequestUrl authorizeRequestUrl;
     
     
-    public TokenAuthenticationService(RedisService service, AuthenticationConfig authenticationConfig) {
+    public AuthenticationService(RedisService service, AuthenticationConfig authenticationConfig) {
     
     	this.authenticationConfig = authenticationConfig;	
     	this.service = service;
